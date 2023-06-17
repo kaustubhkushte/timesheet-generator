@@ -3,10 +3,14 @@ import { EmployeeData } from './models/EmployeeData';
 import { TimesheetData } from './models/TimesheetData';
 
 
-function evaluateDay(fromDate: Date): string {  
-  const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-  const dayIndex = new Date(fromDate).getDay();
-  return daysOfWeek[dayIndex];
+function evaluateDay(fromDate: string): string {  
+  const [day, month, year] = fromDate.split('-').map(Number);
+  const date = new Date(year, month - 1, day);
+  const options:Intl.DateTimeFormatOptions = {
+    weekday: 'long'
+  };
+  const dayOfWeek = date.toLocaleDateString('en-US', options);
+  return dayOfWeek;
 }
 
 export function groupByEmployeeName(data: EmployeeData[]): Record<string, TimesheetData[]> {
@@ -36,7 +40,12 @@ export function createWorkbook(groupedData: Record<string, TimesheetData[]>): XL
       header: ['date','day', 'task', 'hrs'],
       skipHeader: false,
     });
-
+    worksheet['!cols'] = [
+      { width: 15 },
+      { width: 20 },
+      { width: 100 },
+      { width: 50 }
+    ];
     XLSX.utils.book_append_sheet(workbook, worksheet, employeeName);
   }
 
@@ -48,12 +57,22 @@ export function readExcelFile(filePath: string): Promise<EmployeeData[]> {
     try {
       const workbook: XLSX.WorkBook = XLSX.readFile(filePath);
       const worksheet: XLSX.WorkSheet = workbook.Sheets[workbook.SheetNames[0]];
-      const jsonData: EmployeeData[] = XLSX.utils.sheet_to_json(worksheet, {        
+      
+      const jsonArray = XLSX.utils.sheet_to_json(worksheet, {        
         defval: undefined,
         raw: false,
         dateNF: 'yyyy-mm-dd',
       });
 
+      const jsonData: EmployeeData[] = jsonArray.map((rowObject:any)=>{
+        const employeeData:EmployeeData = {
+          employeeName: rowObject.EmployeeName,
+          date: rowObject.Date,
+          task: rowObject.Description,
+          hrs: rowObject.TotalWorkingHours
+        } 
+        return employeeData;
+      });
       resolve(jsonData);
     } catch (error) {
       reject(error);

@@ -1,5 +1,5 @@
 export interface TimesheetData {
-    date: Date;
+    date: string;
     day: string;
     task: string;
     hrs: number;

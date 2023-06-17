@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Preview Sheets</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-alpha1/dist/css/bootstrap.min.css">
+</head>
+<body>
+  <h1>Preview Sheets</h1>
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Sheet Name</th>
+        <th>Date</th>
+        <th>Day</th>
+        <th>Task</th>
+        <th>Hours</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% sheetsData.forEach(function(sheetData) { %>
+        <tr>
+          <td><%= sheetData.sheetName %></td>
+          <% sheetData.data.forEach(function(item) { %>
+            <td><%= item.date %></td>
+            <td><%= item.day %></td>
+            <td><%= item.task %></td>
+            <td><%= item.hrs %></td>
+          <% }) %>
+        </tr>
+      <% }) %>
+    </tbody>
+  </table>
+</body>
+</html>

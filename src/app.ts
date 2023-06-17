@@ -6,23 +6,22 @@ import swaggerJSDoc from 'swagger-jsdoc';
 import swaggerUi from 'swagger-ui-express';
 import * as XLSX from 'xlsx';
 import fs from 'fs';
-interface EmployeeData {
-  employeeName: string;
-  date: Date;
-  task: string;
-  hrs: number;
-}
+import path from 'path';
+import {EmployeeData} from './models/EmployeeData';
+import {TimesheetData} from './models/TimesheetData';
 
 const app = express();
 const upload = multer({ dest: 'uploads/' });
 
+app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
+app.use('/static',express.static(path.join(__dirname, 'views/public/')));
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 app.get('/', (_req, res) => {
-  res.render('landing', { title: 'Timesheet Data Formatter' });
+  res.render('index', { title: 'Timesheet Data Formatter' });
 });
 
 app.post('/generate', upload.single('xlsxFile'), async (req, res) => {
@@ -33,7 +32,7 @@ app.post('/generate', upload.single('xlsxFile'), async (req, res) => {
   const filePath = req.file.path;
   try {
     const jsonData: EmployeeData[] = await XLSXHandler.readExcelFile(filePath);
-    const groupedData: Record<string, EmployeeData[]> = XLSXHandler.groupByEmployeeName(jsonData);
+    const groupedData: Record<string, TimesheetData[]> = XLSXHandler.groupByEmployeeName(jsonData);
     const workbook: XLSX.WorkBook = XLSXHandler.createWorkbook(groupedData);
     const outputPath = 'converted.xlsx';
     await XLSXHandler.writeExcelFile(outputPath, workbook);

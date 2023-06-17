@@ -1,11 +1,38 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Google Spreadsheet Generator</title>
+  <title>Timesheet Data Formatter</title>
+  <!-- Add Bootstrap CSS -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.2.0/css/bootstrap.min.css">
 </head>
 <body>
-  <h1>Google Spreadsheet Generator</h1>
-  <a href="/preview" class="btn btn-primary">Preview</a>
-  <a href="/generate" class="btn btn-success">Generate</a>
+  <div class="container">
+    <h1>Timesheet Data Formatter</h1>
+    <form id="uploadForm">
+      <div class="mb-3">
+        <input class="form-control" type="file" id="fileInput" accept=".xlsx" required>
+      </div>
+      <div class="text-center">
+        <button class="btn btn-primary" type="submit">Upload</button>
+      </div>
+    </form>
+    <div id="loader" class="text-center d-none">
+      <div class="spinner-border" role="status">
+        <span class="visually-hidden">Loading...</span>
+      </div>
+      <p class="mt-2">Uploading file...</p>
+    </div>
+    <div id="result" class="mt-4"></div>
+  </div>
+
+  <!-- Add Axios and Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <script type="text/javascript" src="/static/upload.js"></script>
+  <script>
+    const uploadForm = document.getElementById('uploadForm');
+    uploadForm.addEventListener('submit', handleFormSubmit);
+    const loader = document.getElementById('loader');
+    const resultContainer = document.getElementById('result');
+  </script>
 </body>
 </html>

@@ -1,7 +1,7 @@
 import * as XLSX from 'xlsx';
 import { EmployeeData } from './models/EmployeeData';
 import { TimesheetData } from './models/TimesheetData';
-
+import { EmployeeTimesheetData } from './models/EmployeeTimesheetData';
 
 function evaluateDay(fromDate: string): string {  
   const [day, month, year] = fromDate.split('-').map(Number);
@@ -13,30 +13,62 @@ function evaluateDay(fromDate: string): string {
   return dayOfWeek;
 }
 
-export function groupByEmployeeName(data: EmployeeData[]): Record<string, TimesheetData[]> {
+export function groupByEmployeeName(data: EmployeeData[]): EmployeeTimesheetData[] {
+  
   const groupedData: Record<string, TimesheetData[]> = {};
-
+  
   data.forEach((row) => {
-    const { employeeName, date, task, hrs } = row;
+    const { employeeName, date, task, hrs }:EmployeeData = row;
 
     if (!groupedData[employeeName]) {
       groupedData[employeeName] = [];
     }
-    const day = evaluateDay(date);    
+    const day = evaluateDay(date); 
+      
     groupedData[employeeName].push({ date, day, task, hrs });
   });
 
-  return groupedData;
-}
-
-export function createWorkbook(groupedData: Record<string, TimesheetData[]>): XLSX.WorkBook {
-  const workbook: XLSX.WorkBook = XLSX.utils.book_new();
+  const employeeTimesheetArray:EmployeeTimesheetData[] = [];
 
   for (const employeeName in groupedData) {
-    const worksheetData = groupedData[employeeName];
-        
-    
-    const worksheet: XLSX.WorkSheet = XLSX.utils.json_to_sheet(worksheetData, {
+    const timesheetData:TimesheetData[] = groupedData[employeeName];
+    const employeeTimesheet:EmployeeTimesheetData = {
+      employeeName:employeeName,
+      data:timesheetData
+    }
+    employeeTimesheetArray.push(employeeTimesheet);
+  }
+  
+
+  return employeeTimesheetArray;
+}
+
+function calculateSumOfHrs(data: TimesheetData[]): number {
+  return data.reduce((sum, entry) => sum + Number(entry.hrs), 0);
+}
+
+export function createWorkbook(employeeTimesheetArray: EmployeeTimesheetData[]): XLSX.WorkBook {
+  const workbook: XLSX.WorkBook = XLSX.utils.book_new();
+  const employeeSummary:any[] = []
+  employeeSummary.push(['Employee Name', 'Total Hrs', 'Working Days']);
+  employeeTimesheetArray.forEach(employeeTimesheet => {
+    const sum = calculateSumOfHrs(employeeTimesheet.data);
+    const manDays = Math.ceil(sum / 8)
+    const summary:any[] = []
+    summary.push(employeeTimesheet.employeeName);
+    summary.push(sum);
+    summary.push(manDays);
+    employeeSummary.push(summary)
+  });
+
+  const summaryWorkSheet: XLSX.WorkSheet = XLSX.utils.aoa_to_sheet(employeeSummary, {});
+
+
+  XLSX.utils.book_append_sheet(workbook, summaryWorkSheet, "Summary");
+
+  employeeTimesheetArray.forEach(employeeTimesheet => {
+  
+    const worksheet: XLSX.WorkSheet = XLSX.utils.json_to_sheet(employeeTimesheet.data, {
       header: ['date','day', 'task', 'hrs'],
       skipHeader: false,
     });
@@ -46,8 +78,10 @@ export function createWorkbook(groupedData: Record<string, TimesheetData[]>): XL
       { width: 100 },
       { width: 50 }
     ];
-    XLSX.utils.book_append_sheet(workbook, worksheet, employeeName);
-  }
+    XLSX.utils.book_append_sheet(workbook, worksheet, employeeTimesheet.employeeName);
+
+});
+  
 
   return workbook;
 }

@@ -8,7 +8,7 @@ import * as XLSX from 'xlsx';
 import fs from 'fs';
 import path from 'path';
 import {EmployeeData} from './models/EmployeeData';
-import {TimesheetData} from './models/TimesheetData';
+import { EmployeeTimesheetData } from './models/EmployeeTimesheetData';
 
 const app = express();
 const upload = multer({ dest: 'uploads/' });
@@ -32,8 +32,8 @@ app.post('/generate', upload.single('xlsxFile'), async (req, res) => {
   const filePath = req.file.path;
   try {
     const jsonData: EmployeeData[] = await XLSXHandler.readExcelFile(filePath);
-    const groupedData: Record<string, TimesheetData[]> = XLSXHandler.groupByEmployeeName(jsonData);
-    const workbook: XLSX.WorkBook = XLSXHandler.createWorkbook(groupedData);
+    const employeeTimesheetArray: EmployeeTimesheetData[] = XLSXHandler.groupByEmployeeName(jsonData);
+    const workbook: XLSX.WorkBook = XLSXHandler.createWorkbook(employeeTimesheetArray);
     const outputPath = 'converted.xlsx';
     await XLSXHandler.writeExcelFile(outputPath, workbook);
     res.download(outputPath, 'converted.xlsx', () => {
